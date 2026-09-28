@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة الكتالوج — مسار الموضة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#8E4AAD; --purple-dark:#5C2E74; --purple-tint:#F4EAF8;
+    --gray-dark:#6B6B6B; --ink:#201C22; --bg:#FBFAFC; --surface:#FFFFFF; --line:#E7E2EA;
+    --danger:#B23A48; --danger-tint:#FBEAEC;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Tajawal', sans-serif; min-height:100vh;}
+  header{background:var(--surface); padding:20px 6vw; border-bottom:3px dashed var(--purple-tint); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+  header h1{font-family:'Cairo', sans-serif; font-weight:800; font-size:20px; color:var(--purple-dark);}
+  header a{font-size:13px; color:var(--gray-dark); text-decoration:none;}
+  header a:hover{color:var(--purple);}
+  main{padding:40px 6vw 100px; max-width:900px; margin:0 auto;}
+
+  #loginBox{max-width:360px; margin:60px auto; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:32px;}
+  #loginBox h2{font-family:'Cairo', sans-serif; font-size:20px; color:var(--purple-dark); margin-bottom:20px; text-align:center;}
+  #loginBox p.hint{font-size:12px; color:var(--gray-dark); text-align:center; margin-top:14px; line-height:1.8;}
+
+  label{display:block; font-size:13px; color:var(--gray-dark); margin:16px 0 6px;}
+  input, textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px;
+    font-family:'Tajawal', sans-serif; font-size:14px; background:var(--surface); color:var(--ink);
+  }
+  input:focus, textarea:focus{outline:none; border-color:var(--purple);}
+  textarea{resize:vertical; min-height:70px;}
+  button{
+    font-family:'Tajawal', sans-serif; font-size:14px; font-weight:500; cursor:pointer;
+    border-radius:8px; padding:11px 22px; border:none; transition:opacity .2s ease;
+  }
+  button:hover{opacity:.88;}
+  .btn-primary{background:var(--purple); color:#fff;}
+  .btn-secondary{background:var(--surface); border:1px solid var(--line); color:var(--ink);}
+  .btn-danger{background:var(--danger-tint); color:var(--danger);}
+
+  .card-form{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:26px 28px; margin-bottom:36px;}
+  .card-form h2{font-family:'Cairo', sans-serif; font-size:19px; color:var(--purple-dark); margin-bottom:4px;}
+  .card-form .sub{font-size:12.5px; color:var(--gray-dark);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:640px){.row2{grid-template-columns:1fr;}}
+
+  .sizes-editor{margin-top:16px;}
+  .size-row{display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center;}
+  .size-row input{padding:8px 10px; font-size:13px;}
+  .size-row button{padding:6px 10px; font-size:12px;}
+
+  .form-actions{display:flex; gap:10px; margin-top:22px;}
+
+  .list-title{font-family:'Cairo', sans-serif; font-size:19px; color:var(--purple-dark); margin-bottom:16px;}
+  .prod-row{
+    display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; padding:12px 16px; margin-bottom:10px;
+  }
+  .prod-row img{width:48px; height:64px; object-fit:cover; border-radius:6px; background:var(--purple-tint);}
+  .prod-row .info{flex:1;}
+  .prod-row .info b{font-family:'Cairo', sans-serif; font-size:14px;}
+  .prod-row .info span{display:block; font-size:12px; color:var(--gray-dark); margin-top:2px;}
+  .prod-row .actions{display:flex; gap:8px;}
+  .prod-row .actions button{padding:7px 14px; font-size:12.5px;}
+  .empty{color:var(--gray-dark); font-size:13.5px; padding:16px 0;}
+  #statusMsg{font-size:13px; margin-top:10px;}
+  #statusMsg.ok{color:#2E7D32;} #statusMsg.err{color:var(--danger);}
+  #loginErr{color:var(--danger); font-size:13px; margin-top:10px; text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>لوحة إدارة الكتالوج</h1>
+  <div style="display:flex; gap:16px; align-items:center;">
+    <a href="index.html">عرض الكتالوج ←</a>
+    <a href="#" id="logoutLink" style="display:none;">تسجيل الخروج</a>
+  </div>
+</header>
+
+<main>
+
+  <div id="loginBox">
+    <h2>تسجيل الدخول</h2>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="loginEmail" placeholder="name@example.com">
+    <label>كلمة المرور</label>
+    <input type="password" id="loginPass" placeholder="••••••••">
+    <div class="form-actions" style="margin-top:20px;">
+      <button class="btn-primary" style="flex:1;" onclick="doLogin()">دخول</button>
+    </div>
+    <div id="loginErr"></div>
+    <p class="hint">هذا الحساب يُنشأ من Firebase Console > Authentication، ولا يُسمح بأي تسجيل جديد من هنا لأسباب أمنية.</p>
+  </div>
+
+  <div id="adminArea" style="display:none;">
+
+    <div class="card-form">
+      <h2 id="formTitle">إضافة موديل جديد</h2>
+      <div class="sub">كل الحقول تُحفظ مباشرة في قاعدة البيانات وتظهر فوراً في الكتالوج</div>
+
+      <div class="row2">
+        <div>
+          <label>اسم القطعة</label>
+          <input id="f_name" placeholder="مثال: عباءة الياسمين">
+        </div>
+        <div>
+          <label>رقم الموديل</label>
+          <input id="f_model" placeholder="مثال: MF-1080">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>الخامة</label>
+          <input id="f_material" placeholder="مثال: كريب فرنسي فاخر">
+        </div>
+        <div>
+          <label>السعر (ريال)</label>
+          <input id="f_price" type="number" placeholder="مثال: 420">
+        </div>
+      </div>
+
+      <label>رابط صورة الغلاف (تظهر في الشبكة الرئيسية)</label>
+      <input id="f_cover" placeholder="https://...">
+
+      <label>روابط صور إضافية للمعرض (كل رابط بسطر منفصل)</label>
+      <textarea id="f_gallery" placeholder="https://...
+https://...
+https://..."></textarea>
+
+      <label>قصة التصميم</label>
+      <textarea id="f_story" placeholder="اكتبي هنا قصة القطعة، الإلهام، ولمسات التصميم..."></textarea>
+
+      <label>جدول المقاسات</label>
+      <div class="sizes-editor" id="sizesEditor"></div>
+      <button class="btn-secondary" onclick="addSizeRow()">+ إضافة مقاس</button>
+
+      <div class="form-actions">
+        <button class="btn-primary" onclick="saveProduct()">حفظ المنتج</button>
+        <button class="btn-secondary" id="cancelEditBtn" style="display:none;" onclick="resetForm()">إلغاء التعديل</button>
+      </div>
+      <div id="statusMsg"></div>
+    </div>
+
+    <div class="list-title">المنتجات الحالية</div>
+    <div id="prodList"></div>
+
+  </div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<script>
+let editingId = null;
+let productsCache = [];
+
+function addSizeRow(size='', length='', chest='', shoulder=''){
+  const wrap = document.getElementById('sizesEditor');
+  const row = document.createElement('div');
+  row.className = 'size-row';
+  row.innerHTML = `
+    <input placeholder="المقاس (S/M/L)" value="${size}">
+    <input placeholder="الطول" value="${length}">
+    <input placeholder="الصدر" value="${chest}">
+    <input placeholder="الكتف" value="${shoulder}">
+    <button class="btn-danger" onclick="this.parentElement.remove()">حذف</button>
+  `;
+  wrap.appendChild(row);
+}
+
+function resetForm(){
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'إضافة موديل جديد';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('f_name').value = '';
+  document.getElementById('f_model').value = '';
+  document.getElementById('f_material').value = '';
+  document.getElementById('f_price').value = '';
+  document.getElementById('f_cover').value = '';
+  document.getElementById('f_gallery').value = '';
+  document.getElementById('f_story').value = '';
+  document.getElementById('sizesEditor').innerHTML = '';
+  addSizeRow('S','',''); 
+  document.getElementById('sizesEditor').innerHTML = '';
+  ['S','M','L','XL'].forEach(s=>addSizeRow(s));
+  document.getElementById('statusMsg').textContent = '';
+}
+
+function collectSizes(){
+  const rows = document.querySelectorAll('#sizesEditor .size-row');
+  const sizes = [];
+  rows.forEach(r=>{
+    const inputs = r.querySelectorAll('input');
+    if(inputs[0].value.trim()){
+      sizes.push({ size:inputs[0].value.trim(), length:inputs[1].value.trim(), chest:inputs[2].value.trim(), shoulder:inputs[3].value.trim() });
+    }
+  });
+  return sizes;
+}
+
+function saveProduct(){
+  const name = document.getElementById('f_name').value.trim();
+  const model = document.getElementById('f_model').value.trim();
+  const material = document.getElementById('f_material').value.trim();
+  const price = Number(document.getElementById('f_price').value);
+  const cover = document.getElementById('f_cover').value.trim();
+  const gallery = document.getElementById('f_gallery').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const story = document.getElementById('f_story').value.trim();
+  const sizes = collectSizes();
+  const statusMsg = document.getElementById('statusMsg');
+
+  if(!name || !model || !cover || !price){
+    statusMsg.className = 'err';
+    statusMsg.textContent = 'الرجاء تعبئة الاسم ورقم الموديل والسعر ورابط صورة الغلاف على الأقل';
+    return;
+  }
+
+  const data = { name, model, material, price, cover, gallery: gallery.length?gallery:[cover], story, sizes };
+
+  const promise = editingId
+    ? db.collection('products').doc(editingId).update(data)
+    : db.collection('products').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+  promise.then(()=>{
+    statusMsg.className = 'ok';
+    statusMsg.textContent = editingId ? 'تم تحديث المنتج بنجاح' : 'تمت إضافة المنتج بنجاح';
+    resetForm();
+  }).catch(err=>{
+    statusMsg.className = 'err';
+    statusMsg.textContent = 'حدث خطأ: ' + err.message;
+  });
+}
+
+function editProduct(id){
+  const p = productsCache.find(x=>x.id===id);
+  if(!p) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = 'تعديل: ' + p.name;
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  document.getElementById('f_name').value = p.name || '';
+  document.getElementById('f_model').value = p.model || '';
+  document.getElementById('f_material').value = p.material || '';
+  document.getElementById('f_price').value = p.price || '';
+  document.getElementById('f_cover').value = p.cover || '';
+  document.getElementById('f_gallery').value = (p.gallery||[]).join('\n');
+  document.getElementById('f_story').value = p.story || '';
+  document.getElementById('sizesEditor').innerHTML = '';
+  (p.sizes||[]).forEach(s=>addSizeRow(s.size, s.length, s.chest, s.shoulder));
+  if((p.sizes||[]).length===0) ['S','M','L','XL'].forEach(s=>addSizeRow(s));
+  window.scrollTo(0,0);
+}
+
+function deleteProduct(id, name){
+  if(!confirm('حذف "' + name + '" نهائياً؟ لا يمكن التراجع.')) return;
+  db.collection('products').doc(id).delete();
+}
+
+function renderList(){
+  const list = document.getElementById('prodList');
+  list.innerHTML = '';
+  if(productsCache.length===0){
+    list.innerHTML = '<div class="empty">لا توجد منتجات مضافة بعد</div>';
+    return;
+  }
+  productsCache.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'prod-row';
+    row.innerHTML = `
+      <img src="${p.cover}">
+      <div class="info"><b>${p.name}</b><span>${p.model} — ${Number(p.price).toLocaleString('ar-SA')} ريال</span></div>
+      <div class="actions">
+        <button class="btn-secondary" onclick="editProduct('${p.id}')">تعديل</button>
+        <button class="btn-danger" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g,"")}')">حذف</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const loginErr = document.getElementById('loginErr');
+  loginErr.textContent = '';
+  auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+    loginErr.textContent = 'فشل تسجيل الدخول: تأكدي من البريد وكلمة المرور';
+  });
+}
+
+document.getElementById('logoutLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  auth.signOut();
+});
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('adminArea').style.display = 'block';
+    document.getElementById('logoutLink').style.display = 'inline';
+    resetForm();
+    db.collection('products').orderBy('createdAt','desc').onSnapshot(snap=>{
+      productsCache = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderList();
+    });
+  } else {
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('adminArea').style.display = 'none';
+    document.getElementById('logoutLink').style.display = 'none';
+  }
+});
+</script>
+
+</body>
+</html>

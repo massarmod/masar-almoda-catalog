@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مسار الموضة — كتالوج الأزياء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#8E4AAD;
+    --purple-dark:#5C2E74;
+    --purple-tint:#F4EAF8;
+    --gray:#9E9E9E;
+    --gray-dark:#6B6B6B;
+    --ink:#201C22;
+    --bg:#FBFAFC;
+    --surface:#FFFFFF;
+    --line:#E7E2EA;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg); color:var(--ink); font-family:'Tajawal', sans-serif; min-height:100vh;}
+  header{
+    background:var(--surface); padding:22px 6vw; border-bottom:3px dashed var(--purple-tint);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+  }
+  .brand{display:flex; align-items:center; gap:14px;}
+  .brand img{height:64px; width:auto;}
+  .brand-text small{display:block; color:var(--gray-dark); font-size:12px; letter-spacing:.5px; margin-top:2px;}
+  .tagline{font-size:13px; color:var(--gray-dark); max-width:300px; text-align:left; line-height:1.8;}
+  main{padding:48px 6vw 100px;}
+  .section-title{display:flex; align-items:baseline; gap:14px; margin-bottom:32px;}
+  .section-title h1{font-family:'Cairo', sans-serif; font-weight:800; font-size:26px; color:var(--purple-dark);}
+  .section-title small{color:var(--gray-dark); font-size:13px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:28px;}
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    cursor:pointer; transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease; position:relative;
+  }
+  .card:hover{transform:translateY(-6px); border-color:var(--purple); box-shadow:0 12px 28px rgba(142,74,173,0.16);}
+  .card .imgbox{position:relative; width:100%; aspect-ratio:3/4; overflow:hidden; background:var(--purple-tint);}
+  .card .imgbox img{width:100%; height:100%; object-fit:cover; transition:transform .6s ease;}
+  .card:hover .imgbox img{transform:scale(1.06);}
+  .tag{
+    position:absolute; top:12px; left:12px; background:var(--purple); color:#fff; font-size:11px; font-weight:700;
+    letter-spacing:.5px; padding:6px 12px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,.18);
+  }
+  .card-body{padding:16px 18px 20px;}
+  .card-body .material{font-size:12px; color:var(--gray-dark); letter-spacing:.3px; margin-bottom:6px;}
+  .card-body .price{font-size:20px; color:var(--purple-dark); font-weight:700; font-family:'Cairo', sans-serif;}
+  .card-body .price small{font-size:12px; color:var(--gray-dark); font-family:'Tajawal', sans-serif; font-weight:400; margin-right:4px;}
+  .view-hint{font-size:11px; color:var(--gray); margin-top:10px; display:flex; align-items:center; gap:6px;}
+  #detailView{display:none;}
+  .back-btn{
+    background:var(--surface); border:1px solid var(--line); color:var(--ink); font-family:'Tajawal', sans-serif;
+    font-size:13px; padding:9px 18px; border-radius:8px; cursor:pointer; margin-bottom:32px;
+    transition:border-color .25s ease, color .25s ease;
+  }
+  .back-btn:hover{border-color:var(--purple); color:var(--purple-dark);}
+  .detail-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:56px;}
+  @media (max-width:860px){.detail-grid{grid-template-columns:1fr;}}
+  .gallery-main{width:100%; aspect-ratio:3/4; background:var(--purple-tint); overflow:hidden; margin-bottom:14px; border-radius:10px; border:1px solid var(--line);}
+  .gallery-main img{width:100%; height:100%; object-fit:cover;}
+  .thumbs{display:flex; gap:10px; flex-wrap:wrap;}
+  .thumbs img{width:64px; height:82px; object-fit:cover; border-radius:6px; border:1px solid var(--line); cursor:pointer; opacity:.6; transition:opacity .25s ease, border-color .25s ease;}
+  .thumbs img.active, .thumbs img:hover{opacity:1; border-color:var(--purple);}
+  .detail-info .eyebrow{color:var(--purple); font-size:12px; font-weight:700; letter-spacing:1.5px; margin-bottom:10px;}
+  .detail-info h2{font-family:'Cairo', sans-serif; font-weight:800; font-size:28px; margin-bottom:6px; color:var(--ink);}
+  .detail-info .sub{color:var(--gray-dark); font-size:14px; margin-bottom:22px;}
+  .price-tag{font-size:26px; color:var(--purple-dark); font-weight:800; font-family:'Cairo', sans-serif; margin-bottom:26px;}
+  .price-tag small{font-size:13px; color:var(--gray-dark); font-weight:400; font-family:'Tajawal',sans-serif; margin-right:6px;}
+  .spec-row{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px dashed var(--line); font-size:14px;}
+  .spec-row span:first-child{color:var(--gray-dark);}
+  .spec-row span:last-child{color:var(--ink); font-weight:500;}
+  .story{margin:26px 0; font-size:14.5px; line-height:2; color:#3A343E;}
+  .story h3, .sizes h3{font-family:'Cairo', sans-serif; font-weight:700; font-size:18px; color:var(--purple-dark); margin-bottom:10px;}
+  table.sizes-table{width:100%; border-collapse:collapse; margin-top:6px; font-size:13.5px; border-radius:8px; overflow:hidden;}
+  table.sizes-table th, table.sizes-table td{padding:10px 8px; text-align:center; border:1px solid var(--line);}
+  table.sizes-table th{background:var(--purple-tint); color:var(--purple-dark); font-weight:700;}
+  table.sizes-table td{color:var(--ink);}
+  footer{text-align:center; padding:30px; color:var(--gray-dark); font-size:12px; border-top:1px solid var(--line);}
+  .empty, .loading{color:var(--gray-dark); font-size:14px; padding:40px 0; text-align:center;}
+  .admin-link{font-size:11px; color:var(--gray); text-decoration:none;}
+  .admin-link:hover{color:var(--purple);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="logo.jpg" alt="مسار الموضة">
+    <div class="brand-text"><small>شركة الخطوط المبدعة للخياطة</small></div>
+  </div>
+  <div class="tagline">كل قطعة تحمل رقمها وخامتها وحكايتها الخاصة — اضغطي على الصورة للاطلاع على التفاصيل الكاملة</div>
+</header>
+
+<main>
+  <div id="catalogView">
+    <div class="section-title">
+      <h1>مجموعة الموسم</h1>
+      <small id="countLabel"></small>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="loading" id="loadingMsg">جاري تحميل المنتجات...</div>
+  </div>
+
+  <div id="detailView">
+    <button class="back-btn" onclick="closeDetail()">→ الرجوع إلى الكتالوج</button>
+    <div class="detail-grid">
+      <div class="gallery">
+        <div class="gallery-main"><img id="mainImg" src=""></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="detail-info">
+        <div class="eyebrow" id="dModel"></div>
+        <h2 id="dName"></h2>
+        <div class="sub" id="dSub"></div>
+        <div class="price-tag" id="dPrice"></div>
+        <div class="spec-row"><span>رقم الموديل</span><span id="dModel2"></span></div>
+        <div class="spec-row"><span>الخامة</span><span id="dMaterial"></span></div>
+        <div class="spec-row"><span>السعر</span><span id="dPrice2"></span></div>
+        <div class="story"><h3>قصة التصميم</h3><p id="dStory"></p></div>
+        <div class="sizes"><h3>جدول المقاسات (سم)</h3><table class="sizes-table" id="dSizes"></table></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  مسار الموضة — شركة الخطوط المبدعة للخياطة
+  &nbsp;|&nbsp; <a class="admin-link" href="admin.html">دخول الإدارة</a>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<script>
+let products = [];
+
+function fmtPrice(p){ return Number(p).toLocaleString('ar-SA') + ' ريال'; }
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  const countLabel = document.getElementById('countLabel');
+  const loadingMsg = document.getElementById('loadingMsg');
+  loadingMsg.style.display = 'none';
+  grid.innerHTML = '';
+  countLabel.textContent = products.length + " قطعة";
+  if(products.length === 0){
+    grid.innerHTML = '<div class="empty">لا توجد منتجات مضافة بعد — أضيفي أول منتج من صفحة الإدارة</div>';
+    return;
+  }
+  products.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = ()=>{ location.hash = '#/product/' + p.id; };
+    card.innerHTML = `
+      <div class="imgbox">
+        <img src="${p.cover}" alt="${p.name}">
+        <div class="tag">${p.model}</div>
+      </div>
+      <div class="card-body">
+        <div class="material">${p.material}</div>
+        <div class="price">${fmtPrice(p.price)}</div>
+        <div class="view-hint">اضغطي على الصورة لعرض التفاصيل ←</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderDetail(p){
+  const gallery = (p.gallery && p.gallery.length) ? p.gallery : [p.cover];
+  document.getElementById('mainImg').src = gallery[0];
+  document.getElementById('dModel').textContent = p.model;
+  document.getElementById('dName').textContent = p.name;
+  document.getElementById('dSub').textContent = p.material;
+  document.getElementById('dPrice').innerHTML = fmtPrice(p.price) + '<small>شامل الضريبة</small>';
+  document.getElementById('dModel2').textContent = p.model;
+  document.getElementById('dMaterial').textContent = p.material;
+  document.getElementById('dPrice2').textContent = fmtPrice(p.price);
+  document.getElementById('dStory').textContent = p.story || '';
+
+  const thumbs = document.getElementById('thumbs');
+  thumbs.innerHTML = '';
+  gallery.forEach((src, i)=>{
+    const img = document.createElement('img');
+    img.src = src;
+    if(i===0) img.classList.add('active');
+    img.onclick = ()=>{
+      document.getElementById('mainImg').src = src;
+      thumbs.querySelectorAll('img').forEach(t=>t.classList.remove('active'));
+      img.classList.add('active');
+    };
+    thumbs.appendChild(img);
+  });
+
+  const table = document.getElementById('dSizes');
+  table.innerHTML = '';
+  const headerRow = document.createElement('tr');
+  ['المقاس','الطول','الصدر','الكتف'].forEach(h=>{
+    const th = document.createElement('th'); th.textContent = h; headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
+  (p.sizes || []).forEach(row=>{
+    const tr = document.createElement('tr');
+    [row.size, row.length, row.chest, row.shoulder].forEach(cell=>{
+      const td = document.createElement('td'); td.textContent = cell || '-'; tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+}
+
+function openDetail(id){
+  const p = products.find(x=>x.id === id);
+  if(!p) return;
+  renderDetail(p);
+  document.getElementById('catalogView').style.display = 'none';
+  document.getElementById('detailView').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function closeDetail(){ location.hash = ''; }
+
+function route(){
+  const hash = location.hash;
+  const match = hash.match(/^#\/product\/(.+)/);
+  if(match){
+    openDetail(match[1]);
+  } else {
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('catalogView').style.display = 'block';
+    window.scrollTo(0,0);
+  }
+}
+
+db.collection('products').orderBy('createdAt','desc').onSnapshot(snapshot=>{
+  products = snapshot.docs.map(doc=>({ id: doc.id, ...doc.data() }));
+  renderGrid();
+  route();
+}, err=>{
+  document.getElementById('loadingMsg').textContent = 'تعذر تحميل المنتجات — تأكدي من إعدادات Firebase';
+  console.error(err);
+});
+
+window.addEventListener('hashchange', route);
+</script>
+
+</body>
+</html>
