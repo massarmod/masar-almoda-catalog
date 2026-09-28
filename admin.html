@@ -46,6 +46,21 @@
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
   @media (max-width:640px){.row2{grid-template-columns:1fr;}}
 
+  .upload-row{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .upload-preview{width:74px; height:96px; border-radius:8px; border:1px solid var(--line); background:var(--purple-tint); overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .upload-preview img{width:100%; height:100%; object-fit:cover; display:block;}
+  .upload-preview .ph{font-size:11px; color:var(--gray-dark); text-align:center; padding:4px;}
+  .upload-hint{font-size:11.5px; color:var(--gray-dark); margin-top:6px;}
+
+  .thumb-grid{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;}
+  .thumb-item{position:relative; width:64px; height:82px;}
+  .thumb-item img{width:100%; height:100%; object-fit:cover; border-radius:8px; border:1px solid var(--line);}
+  .thumb-item .rm{
+    position:absolute; top:-7px; left:-7px; width:20px; height:20px; border-radius:50%;
+    background:var(--danger); color:#fff; font-size:11px; padding:0; line-height:20px; text-align:center;
+    border:none; cursor:pointer;
+  }
+
   .sizes-editor{margin-top:16px;}
   .size-row{display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center;}
   .size-row input{padding:8px 10px; font-size:13px;}
@@ -123,13 +138,22 @@
         </div>
       </div>
 
-      <label>رابط صورة الغلاف (تظهر في الشبكة الرئيسية)</label>
-      <input id="f_cover" placeholder="https://...">
+      <label>صورة الغلاف (تظهر في الشبكة الرئيسية)</label>
+      <div class="upload-row">
+        <div class="upload-preview" id="coverPreviewWrap">
+          <span class="ph">لا توجد صورة</span>
+        </div>
+        <div>
+          <input type="file" id="f_cover_file" accept="image/*" style="display:none" onchange="handleCoverUpload(this)">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('f_cover_file').click()">اختاري صورة من جهازك</button>
+          <div class="upload-hint">يتم تصغير الصورة تلقائياً لتناسب سرعة الموقع</div>
+        </div>
+      </div>
 
-      <label>روابط صور إضافية للمعرض (كل رابط بسطر منفصل)</label>
-      <textarea id="f_gallery" placeholder="https://...
-https://...
-https://..."></textarea>
+      <label>صور إضافية للمعرض (يمكن اختيار أكثر من صورة دفعة واحدة)</label>
+      <input type="file" id="f_gallery_file" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(this)">
+      <button type="button" class="btn-secondary" onclick="document.getElementById('f_gallery_file').click()">+ إضافة صور للمعرض</button>
+      <div class="thumb-grid" id="galleryPreviewWrap"></div>
 
       <label>قصة التصميم</label>
       <textarea id="f_story" placeholder="اكتبي هنا قصة القطعة، الإلهام، ولمسات التصميم..."></textarea>
@@ -160,6 +184,88 @@ https://..."></textarea>
 <script>
 let editingId = null;
 let productsCache = [];
+let coverBase64 = '';
+let galleryBase64Arr = [];
+
+// ===== ضغط وتصغير الصورة قبل الحفظ =====
+function compressImage(file, maxWidth, quality){
+  maxWidth = maxWidth || 900;
+  quality = quality || 0.65;
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > maxWidth){ h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = ()=>reject(new Error('تعذرت قراءة الصورة'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=>reject(new Error('تعذرت قراءة الملف'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderCoverPreview(){
+  const wrap = document.getElementById('coverPreviewWrap');
+  wrap.innerHTML = coverBase64
+    ? `<img src="${coverBase64}">`
+    : `<span class="ph">لا توجد صورة</span>`;
+}
+
+function renderGalleryThumbs(){
+  const wrap = document.getElementById('galleryPreviewWrap');
+  wrap.innerHTML = '';
+  galleryBase64Arr.forEach((src, i)=>{
+    const item = document.createElement('div');
+    item.className = 'thumb-item';
+    item.innerHTML = `<img src="${src}"><button type="button" class="rm" onclick="removeGalleryImage(${i})">×</button>`;
+    wrap.appendChild(item);
+  });
+}
+
+function removeGalleryImage(i){
+  galleryBase64Arr.splice(i, 1);
+  renderGalleryThumbs();
+}
+
+function handleCoverUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  const statusMsg = document.getElementById('statusMsg');
+  statusMsg.className = ''; statusMsg.textContent = 'جاري معالجة الصورة...';
+  compressImage(file, 900, 0.65).then(base64=>{
+    coverBase64 = base64;
+    renderCoverPreview();
+    statusMsg.textContent = '';
+  }).catch(err=>{
+    statusMsg.className = 'err';
+    statusMsg.textContent = 'تعذر رفع الصورة: ' + err.message;
+  });
+  input.value = '';
+}
+
+function handleGalleryUpload(input){
+  const files = Array.from(input.files || []);
+  if(files.length === 0) return;
+  const statusMsg = document.getElementById('statusMsg');
+  statusMsg.className = ''; statusMsg.textContent = 'جاري معالجة الصور...';
+  Promise.all(files.map(f=>compressImage(f, 900, 0.6))).then(results=>{
+    galleryBase64Arr.push(...results);
+    renderGalleryThumbs();
+    statusMsg.textContent = '';
+  }).catch(err=>{
+    statusMsg.className = 'err';
+    statusMsg.textContent = 'تعذر رفع بعض الصور: ' + err.message;
+  });
+  input.value = '';
+}
 
 function addSizeRow(size='', length='', chest='', shoulder=''){
   const wrap = document.getElementById('sizesEditor');
@@ -177,19 +283,20 @@ function addSizeRow(size='', length='', chest='', shoulder=''){
 
 function resetForm(){
   editingId = null;
+  coverBase64 = '';
+  galleryBase64Arr = [];
   document.getElementById('formTitle').textContent = 'إضافة موديل جديد';
   document.getElementById('cancelEditBtn').style.display = 'none';
   document.getElementById('f_name').value = '';
   document.getElementById('f_model').value = '';
   document.getElementById('f_material').value = '';
   document.getElementById('f_price').value = '';
-  document.getElementById('f_cover').value = '';
-  document.getElementById('f_gallery').value = '';
   document.getElementById('f_story').value = '';
-  document.getElementById('sizesEditor').innerHTML = '';
-  addSizeRow('S','',''); 
+  renderCoverPreview();
+  renderGalleryThumbs();
   document.getElementById('sizesEditor').innerHTML = '';
   ['S','M','L','XL'].forEach(s=>addSizeRow(s));
+  document.getElementById('statusMsg').className = '';
   document.getElementById('statusMsg').textContent = '';
 }
 
@@ -210,19 +317,28 @@ function saveProduct(){
   const model = document.getElementById('f_model').value.trim();
   const material = document.getElementById('f_material').value.trim();
   const price = Number(document.getElementById('f_price').value);
-  const cover = document.getElementById('f_cover').value.trim();
-  const gallery = document.getElementById('f_gallery').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const story = document.getElementById('f_story').value.trim();
   const sizes = collectSizes();
   const statusMsg = document.getElementById('statusMsg');
 
-  if(!name || !model || !cover || !price){
+  if(!name || !model || !price || !coverBase64){
     statusMsg.className = 'err';
-    statusMsg.textContent = 'الرجاء تعبئة الاسم ورقم الموديل والسعر ورابط صورة الغلاف على الأقل';
+    statusMsg.textContent = 'الرجاء تعبئة الاسم ورقم الموديل والسعر ورفع صورة الغلاف على الأقل';
     return;
   }
 
-  const data = { name, model, material, price, cover, gallery: gallery.length?gallery:[cover], story, sizes };
+  const gallery = galleryBase64Arr.length ? galleryBase64Arr : [coverBase64];
+  const data = { name, model, material, price, cover: coverBase64, gallery, story, sizes };
+
+  const approxSize = new Blob([JSON.stringify(data)]).size;
+  if(approxSize > 950000){
+    statusMsg.className = 'err';
+    statusMsg.textContent = 'حجم الصور كبير جداً — قللي عدد صور المعرض أو اختاري صوراً أخف';
+    return;
+  }
+
+  statusMsg.className = '';
+  statusMsg.textContent = 'جاري الحفظ...';
 
   const promise = editingId
     ? db.collection('products').doc(editingId).update(data)
@@ -242,15 +358,17 @@ function editProduct(id){
   const p = productsCache.find(x=>x.id===id);
   if(!p) return;
   editingId = id;
+  coverBase64 = p.cover || '';
+  galleryBase64Arr = (p.gallery || []).slice();
   document.getElementById('formTitle').textContent = 'تعديل: ' + p.name;
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
   document.getElementById('f_name').value = p.name || '';
   document.getElementById('f_model').value = p.model || '';
   document.getElementById('f_material').value = p.material || '';
   document.getElementById('f_price').value = p.price || '';
-  document.getElementById('f_cover').value = p.cover || '';
-  document.getElementById('f_gallery').value = (p.gallery||[]).join('\n');
   document.getElementById('f_story').value = p.story || '';
+  renderCoverPreview();
+  renderGalleryThumbs();
   document.getElementById('sizesEditor').innerHTML = '';
   (p.sizes||[]).forEach(s=>addSizeRow(s.size, s.length, s.chest, s.shoulder));
   if((p.sizes||[]).length===0) ['S','M','L','XL'].forEach(s=>addSizeRow(s));
